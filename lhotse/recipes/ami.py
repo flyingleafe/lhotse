@@ -32,6 +32,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
+from urllib.error import HTTPError
 from tqdm.auto import tqdm
 
 from lhotse import validate_recordings_and_supervisions
@@ -86,6 +87,7 @@ MEETINGS = {
     'IS1001': ['IS1001a','IS1001b','IS1001c','IS1001d'],
     'IS1002': ['IS1002b','IS1002c','IS1002d'],
     'IS1003': ['IS1003a','IS1003b','IS1003c','IS1003d'],
+    # 'IS1003': ['IS1003a','IS1003c','IS1003d'],
     'IS1004': ['IS1004a','IS1004b','IS1004c','IS1004d'],
     'IS1005': ['IS1005a','IS1005b','IS1005c'],
     'IS1006': ['IS1006a','IS1006b','IS1006c','IS1006d'],
@@ -168,57 +170,63 @@ def download_audio(
         itertools.chain.from_iterable(MEETINGS.values()),
         desc="Downloading AMI meetings",
     ):
-        if mic == "ihm":
-            headset_num = 5 if item in ("EN2001a", "EN2001d", "EN2001e") else 4
-            for m in range(headset_num):
-                wav_name = f"{item}.Headset-{m}.wav"
-                wav_url = f"{url}/AMICorpusMirror/amicorpus/{item}/audio/{wav_name}"
-                wav_dir = target_dir / "wav_db" / item / "audio"
-                wav_dir.mkdir(parents=True, exist_ok=True)
-                wav_path = wav_dir / wav_name
-                resumable_download(
-                    wav_url,
-                    filename=wav_path,
-                    force_download=force_download,
-                )
-        elif mic == "ihm-mix":
-            wav_name = f"{item}.Mix-Headset.wav"
-            wav_url = f"{url}/AMICorpusMirror/amicorpus/{item}/audio/{wav_name}"
-            wav_dir = target_dir / "wav_db" / item / "audio"
-            wav_dir.mkdir(parents=True, exist_ok=True)
-            wav_path = wav_dir / wav_name
-            resumable_download(
-                wav_url, filename=wav_path, force_download=force_download
-            )
-        elif mic == "sdm":
-            wav_name = f"{item}.Array1-01.wav"
-            wav_url = f"{url}/AMICorpusMirror/amicorpus/{item}/audio/{wav_name}"
-            wav_dir = target_dir / "wav_db" / item / "audio"
-            wav_dir.mkdir(parents=True, exist_ok=True)
-            wav_path = wav_dir / wav_name
-            resumable_download(
-                wav_url, filename=wav_path, force_download=force_download
-            )
-        elif mic == "mdm":
-            for array in MDM_ARRAYS:
-                for channel in MDM_CHANNELS:
-                    wav_name = f"{item}.{array}-{channel}.wav"
+        try:
+            if mic == "ihm":
+                headset_num = 5 if item in ("EN2001a", "EN2001d", "EN2001e") else 4
+                for m in range(headset_num):
+                    wav_name = f"{item}.Headset-{m}.wav"
                     wav_url = f"{url}/AMICorpusMirror/amicorpus/{item}/audio/{wav_name}"
                     wav_dir = target_dir / "wav_db" / item / "audio"
                     wav_dir.mkdir(parents=True, exist_ok=True)
                     wav_path = wav_dir / wav_name
                     resumable_download(
-                        wav_url, filename=wav_path, force_download=force_download
+                        wav_url,
+                        filename=wav_path,
+                        force_download=force_download,
                     )
-        elif mic == "mdm8-bf":
-            wav_name = f"{item}_MDM8.wav"
-            wav_url = f"{url}/AMICorpusMirror/amicorpus/beamformed/{item}/{wav_name}"
-            wav_dir = target_dir / "wav_db" / item / "audio"
-            wav_dir.mkdir(parents=True, exist_ok=True)
-            wav_path = wav_dir / wav_name
-            resumable_download(
-                wav_url, filename=wav_path, force_download=force_download
+            elif mic == "ihm-mix":
+                wav_name = f"{item}.Mix-Headset.wav"
+                wav_url = f"{url}/AMICorpusMirror/amicorpus/{item}/audio/{wav_name}"
+                wav_dir = target_dir / "wav_db" / item / "audio"
+                wav_dir.mkdir(parents=True, exist_ok=True)
+                wav_path = wav_dir / wav_name
+                resumable_download(
+                    wav_url, filename=wav_path, force_download=force_download
+                )
+            elif mic == "sdm":
+                wav_name = f"{item}.Array1-01.wav"
+                wav_url = f"{url}/AMICorpusMirror/amicorpus/{item}/audio/{wav_name}"
+                wav_dir = target_dir / "wav_db" / item / "audio"
+                wav_dir.mkdir(parents=True, exist_ok=True)
+                wav_path = wav_dir / wav_name
+                resumable_download(
+                    wav_url, filename=wav_path, force_download=force_download
+                )
+            elif mic == "mdm":
+                for array in MDM_ARRAYS:
+                    for channel in MDM_CHANNELS:
+                        wav_name = f"{item}.{array}-{channel}.wav"
+                        wav_url = f"{url}/AMICorpusMirror/amicorpus/{item}/audio/{wav_name}"
+                        wav_dir = target_dir / "wav_db" / item / "audio"
+                        wav_dir.mkdir(parents=True, exist_ok=True)
+                        wav_path = wav_dir / wav_name
+                        resumable_download(
+                            wav_url, filename=wav_path, force_download=force_download
+                        )
+            elif mic == "mdm8-bf":
+                wav_name = f"{item}_MDM8.wav"
+                wav_url = f"{url}/AMICorpusMirror/amicorpus/beamformed/{item}/{wav_name}"
+                wav_dir = target_dir / "wav_db" / item / "audio"
+                wav_dir.mkdir(parents=True, exist_ok=True)
+                wav_path = wav_dir / wav_name
+                resumable_download(
+                    wav_url, filename=wav_path, force_download=force_download
+                )
+        except HTTPError as e:
+            logging.warning(
+                f"Failed to download {item} audio: {e}. Skipping this meeting."
             )
+            continue
 
 
 def download_ami(

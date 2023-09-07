@@ -50,6 +50,7 @@ from .librispeech import *
 from .libritts import *
 from .ljspeech import *
 from .magicdata import *
+from .magicdata_conv import *
 from .mgb2 import *
 from .mls import *
 from .mtedx import *
