@@ -547,6 +547,22 @@ class Recording:
             duration=ifnone(duration, self.duration),
         )
 
+    def channel_subset(self, channels: Union[int, List[int]]) -> "Recording":
+        if isinstance(channels, int):
+            channels = [channels]
+
+        # Check that the requested channels exist in the recording.
+        if not set(channels).issubset(self.channel_ids):
+            raise ValueError(
+                "Requested to select channels that do not exist in the recording: "
+                f"(recording channels: {self.channel_ids} -- "
+                f"requested channels: {channels})"
+            )
+
+        rec = fastcopy(self)
+        rec.channel_ids = channels
+        return rec
+
     def to_dict(self) -> dict:
         return asdict_nonull(self)
 
@@ -597,7 +613,7 @@ class Recording:
             duration = None
 
         if channels is None:
-            channels = SetContainingAnything()
+            channels = frozenset(self.channel_ids)
         else:
             channels = frozenset([channels] if isinstance(channels, int) else channels)
             recording_channels = frozenset(self.channel_ids)
