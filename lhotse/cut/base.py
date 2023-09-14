@@ -187,6 +187,7 @@ class Cut:
     merge_supervisions: Callable
     filter_supervisions: Callable
     fill_supervision: Callable
+    with_single_recording: Callable
     with_features_path_prefix: Callable
     with_recording_path_prefix: Callable
 
@@ -850,7 +851,8 @@ class Cut:
                 )
             ],
         )
-        return fastcopy(self, recording=recording)
+
+        return self.with_single_recording(recording)
 
     def speakers_feature_mask(
         self,

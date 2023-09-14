@@ -1061,6 +1061,9 @@ class DataCut(Cut, metaclass=ABCMeta):
     def from_dict(data: dict) -> "DataCut":
         ...
 
+    def with_single_recording(self, recording: Recording) -> "DataCut":
+        return fastcopy(self, recording=recording)
+
     def with_features_path_prefix(self, path: Pathlike) -> "DataCut":
         if not self.has_features:
             return self

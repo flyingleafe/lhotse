@@ -18,6 +18,8 @@ from lhotse.augmentation import (
 )
 from lhotse.cut.base import Cut
 from lhotse.cut.data import DataCut
+from lhotse.cut.mono import MonoCut
+from lhotse.cut.multi import MultiCut
 from lhotse.cut.padding import PaddingCut
 from lhotse.features import (
     FeatureExtractor,
@@ -1480,6 +1482,34 @@ class MixedCut(Cut):
             id=data["id"],
             tracks=[MixTrack.from_dict(track) for track in data["tracks"]],
         )
+
+    def with_single_recording(self, recording: Recording) -> DataCut:
+        if len(recording.channel_ids) == 1:
+            return MonoCut(
+                id=self.id,
+                start=0,
+                duration=self.duration,
+                channel=recording.channel_ids[0],
+                supervisions=[
+                    fastcopy(s, recording_id=self.id) for s in self.supervisions
+                ],
+                features=self.features,
+                recording=recording,
+                custom=self.custom if hasattr(self, "custom") else None,
+            )
+        else:
+            return MultiCut(
+                id=self.id,
+                start=0,
+                duration=self.duration,
+                channel=recording.channel_ids,
+                supervisions=[
+                    fastcopy(s, recording_id=self.id) for s in self.supervisions
+                ],
+                features=self.features,
+                recording=recording,
+                custom=self.custom if hasattr(self, "custom") else None,
+            )
 
     def with_features_path_prefix(self, path: Pathlike) -> "MixedCut":
         if not self.has_features:
