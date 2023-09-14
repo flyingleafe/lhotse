@@ -112,6 +112,9 @@ def download_this_american_life(
 def prepare_this_american_life(
     corpus_dir: Pathlike,
     output_dir: Optional[Pathlike] = None,
+    to_mono: bool = False,
+    resample_to: Optional[int] = None,
+    num_jobs: int = 1,
 ):
     manifests = {}
     for subset in ["train", "dev", "test"]:
@@ -119,6 +122,9 @@ def prepare_this_american_life(
             corpus_dir=corpus_dir,
             subset=subset,
             output_dir=output_dir,
+            to_mono=to_mono,
+            resample_to=resample_to,
+            num_jobs=num_jobs,
         )
 
     return manifests
@@ -128,6 +134,9 @@ def prepare_this_american_life_subset(
     corpus_dir: Pathlike,
     subset: str,
     output_dir: Optional[Pathlike] = None,
+    to_mono: bool = False,
+    resample_to: Optional[int] = None,
+    num_jobs: int = 1,
 ):
     if not is_module_available("nltk"):
         raise ImportError("Please 'pip install nltk' first.")

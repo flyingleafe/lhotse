@@ -547,22 +547,6 @@ class Recording:
             duration=ifnone(duration, self.duration),
         )
 
-    def channel_subset(self, channels: Union[int, List[int]]) -> "Recording":
-        if isinstance(channels, int):
-            channels = [channels]
-
-        # Check that the requested channels exist in the recording.
-        if not set(channels).issubset(self.channel_ids):
-            raise ValueError(
-                "Requested to select channels that do not exist in the recording: "
-                f"(recording channels: {self.channel_ids} -- "
-                f"requested channels: {channels})"
-            )
-
-        rec = fastcopy(self)
-        rec.channel_ids = channels
-        return rec
-
     def to_dict(self) -> dict:
         return asdict_nonull(self)
 
@@ -889,6 +873,25 @@ class Recording:
             channel_ids=new_channel_ids,
             transforms=transforms,
         )
+
+    def channel_subset(self, channels: Union[int, List[int]]) -> "Recording":
+        """
+        Return a new ``Recording`` that will use only the specified channels.
+        """
+        if isinstance(channels, int):
+            channels = [channels]
+
+        # Check that the requested channels exist in the recording.
+        if not set(channels).issubset(self.channel_ids):
+            raise ValueError(
+                "Requested to select channels that do not exist in the recording: "
+                f"(recording channels: {self.channel_ids} -- "
+                f"requested channels: {channels})"
+            )
+
+        rec = fastcopy(self)
+        rec.channel_ids = channels
+        return rec
 
     def resample(self, sampling_rate: int) -> "Recording":
         """
